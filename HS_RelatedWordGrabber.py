@@ -8,10 +8,10 @@ from random import randint
 from time import sleep
 
 # Set the parameters here:
-keywordInputFile = 'keywords.txt' # Path and name of the input file.
-keywordOutputFile = 'relatedwords.csv' # Path and name for output file.
+keywordInputFile = 'stacktags_extract.txt' # Path and name of the input file.
+keywordOutputFile = 'stacktags_related.csv' # Path and name for output file.
 numSynonyms = 20 # How many synonyms the program should fetch.
-maxDelay = 12 # How many seconds at most should the program wait to fetch the next keyword. 0 turns off delay
+maxDelay = 2 # How many seconds at most should the program wait to fetch the next keyword. 0 turns off delay
 filterHiringSolved = True # Set if HS's filter is used.  I don't know what the filter actually does.
 
 def getHiringSolvedRelatedWords(keyword,size,filter):
@@ -23,7 +23,7 @@ def getHiringSolvedRelatedWords(keyword,size,filter):
     try:
         r = requests.get(targetURL, auth=('user','pass'))
         relatedWords = r.json()
-        print(relatedWords)
+        # print(relatedWords)
         waiter(maxDelay)
     except Exception:
         print('Unable to get ' + keyword + '!')
@@ -50,28 +50,54 @@ def waiter(seconds):
         print('Waiting ' + str(waitT) + ' seconds...')
         sleep(waitT)
 
-def csvOut_KeyRelateScore(HSDict):
-    csvfile = open(keywordOutputFile, 'w+', encoding='utf-8', newline='')
-    outputWriter = csv.writer(csvfile, dialect='excel')
-    toprow = ['keyword']
-    for x in range(0, numSynonyms):
-        toprow = toprow + ['related', 'score']
-    outputWriter.writerow(toprow)
-    dictKeys = keywordDict.keys()
+def csvOut_KeyRelateScore(HSDict,setTop):
+    if setTop == True:
+        toprow = ['keyword']
+        for x in range(0, numSynonyms):
+            toprow = toprow + ['related', 'score']
+        outputWriter.writerow(toprow)
+    dictKeys = HSDict.keys()
     for keyword in dictKeys:
         rowOut = [keyword]
-        for i in range(0,len(keywordDict[keyword]['related'])):
-            rowOut += [keywordDict[keyword]['related'][i]['id']]
-            rowOut += [keywordDict[keyword]['related'][i]['score']]
-        print('added: ' + str(rowOut))
+        for i in range(0,len(HSDict[keyword]['related'])):
+            rowOut += [HSDict[keyword]['related'][i]['id']]
+            rowOut += [HSDict[keyword]['related'][i]['score']]
+        # print('added: ' + str(rowOut))
         outputWriter.writerow(rowOut)
-    outputWriter.close()
+
+listKeywords = loadKeywordList(keywordInputFile)
+# print(listKeywords)
+csvfile = open(keywordOutputFile, 'w+', encoding='utf-8', newline='')
+outputWriter = csv.writer(csvfile, dialect='excel')
+def runList(start,stop,top):
+    keywordDict = {}
+    for x in range(start,stop):
+        keywordDict.update(getHiringSolvedRelatedWords(listKeywords[x],numSynonyms,filterHiringSolved))
+    csvOut_KeyRelateScore(keywordDict,True)
+
+startWord = 0
+currentWord = 0
+finalWord = 7 # len(listKeywords)
+chunk = 3
+print(finalWord)
+while currentWord <= finalWord:
+    print('Processing words ' + str(currentWord + 1) + " to " + str(currentWord + chunk + 1) + " of " + str(finalWord) + ".")
+    if startWord == currentWord:
+        start = True
+    else:
+        start = False
+    if currentWord + chunk <= finalWord:
+        runList(currentWord,currentWord + chunk,start)
+    else:
+        runList(currentWord,finalWord,start)
+    currentWord = currentWord + chunk
 
 # Start up dictionary to store our keywords and words related to them.
-keywordDict = {}
-# Puts the keywords and related words into keywordDict.
-keywordList = loadKeywordList(keywordInputFile)
-for item in keywordList:
-    keywordDict.update(getHiringSolvedRelatedWords(item,numSynonyms,filterHiringSolved))
+#keywordDict = {}
+# Puts the keywords and related words into keywordList.
+#keywordList = loadKeywordList(keywordInputFile)
+#for item in keywordList:
+#    keywordDict.update(getHiringSolvedRelatedWords(item,numSynonyms,filterHiringSolved))
 # Output to CSV
-csvOut_KeyRelateScore(keywordDict)
+#csvOut_KeyRelateScore(keywordDict,True)
+csvfile.close()
