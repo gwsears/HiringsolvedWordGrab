@@ -50,33 +50,28 @@ def waiter(seconds):
         print('Waiting ' + str(waitT) + ' seconds...')
         sleep(waitT)
 
+def csvOut_KeyRelateScore(HSDict):
+    csvfile = open(keywordOutputFile, 'w+', encoding='utf-8', newline='')
+    outputWriter = csv.writer(csvfile, dialect='excel')
+    toprow = ['keyword']
+    for x in range(0, numSynonyms):
+        toprow = toprow + ['related', 'score']
+    outputWriter.writerow(toprow)
+    dictKeys = keywordDict.keys()
+    for keyword in dictKeys:
+        rowOut = [keyword]
+        for i in range(0,len(keywordDict[keyword]['related'])):
+            rowOut += [keywordDict[keyword]['related'][i]['id']]
+            rowOut += [keywordDict[keyword]['related'][i]['score']]
+        print('added: ' + str(rowOut))
+        outputWriter.writerow(rowOut)
+    outputWriter.close()
+
 # Start up dictionary to store our keywords and words related to them.
 keywordDict = {}
 # Puts the keywords and related words into keywordDict.
 keywordList = loadKeywordList(keywordInputFile)
 for item in keywordList:
     keywordDict.update(getHiringSolvedRelatedWords(item,numSynonyms,filterHiringSolved))
-
-print("Here's your dictionary!")
-print(keywordDict)
-print(keywordDict[keywordList[0]])
-
-csvfile = open(keywordOutputFile, 'w+', encoding='utf-8', newline='')
-outputWriter = csv.writer(csvfile, dialect='excel')
-toprow = ['keyword']
-for x in range(0, numSynonyms):
-    toprow = toprow + ['related', 'score']
-outputWriter.writerow(toprow)
-dictKeys = keywordDict.keys()
-for keyword in dictKeys:
-    print(keyword)
-    rowOut = [keyword]
-    print(len(keywordDict[keyword]['related']))
-    for i in range(0,len(keywordDict[keyword]['related'])):
-        print(keywordDict[keyword]['related'][i]['id'])
-        rowOut += [keywordDict[keyword]['related'][i]['id']]
-        print(keywordDict[keyword]['related'][i]['score'])
-        rowOut += [keywordDict[keyword]['related'][i]['score']]
-    print(rowOut)
-    outputWriter.writerow(rowOut)
-outputWriter.close()
+# Output to CSV
+csvOut_KeyRelateScore(keywordDict)
