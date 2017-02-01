@@ -10,8 +10,8 @@ from time import sleep
 # Set the parameters here:
 keywordInputFile = 'keywords.txt' # Path and name of the input file.
 keywordOutputFile = 'relatedwords.csv' # Path and name for output file.
-numSynonyms = 2 # How many synonyms the program should fetch.
-maxDelay = 15 # How many seconds at most should the program wait to fetch the next keyword. 0 turns off delay
+numSynonyms = 20 # How many synonyms the program should fetch.
+maxDelay = 12 # How many seconds at most should the program wait to fetch the next keyword. 0 turns off delay
 filterHiringSolved = True # Set if HS's filter is used.  I don't know what the filter actually does.
 
 def getHiringSolvedRelatedWords(keyword,size,filter):
@@ -61,11 +61,22 @@ print("Here's your dictionary!")
 print(keywordDict)
 print(keywordDict[keywordList[0]])
 
-#def ouputCSVversion1(HSDictionary):
-#    csvfile = open(keywordOutputFile, 'w+', encoding='utf-8', newline='')
-#    outputWriter = csv.writer(csvfile, dialect='excel')
-#    toprow = ['keyword']
-#    for x in range(1, numSynonyms):
-#        toprow = toprow + ['related word', 'score']
-#    outputWriter.writerow(toprow)
-#    for keyword in HSDictionary:
+csvfile = open(keywordOutputFile, 'w+', encoding='utf-8', newline='')
+outputWriter = csv.writer(csvfile, dialect='excel')
+toprow = ['keyword']
+for x in range(0, numSynonyms):
+    toprow = toprow + ['related', 'score']
+outputWriter.writerow(toprow)
+dictKeys = keywordDict.keys()
+for keyword in dictKeys:
+    print(keyword)
+    rowOut = [keyword]
+    print(len(keywordDict[keyword]['related']))
+    for i in range(0,len(keywordDict[keyword]['related'])):
+        print(keywordDict[keyword]['related'][i]['id'])
+        rowOut += [keywordDict[keyword]['related'][i]['id']]
+        print(keywordDict[keyword]['related'][i]['score'])
+        rowOut += [keywordDict[keyword]['related'][i]['score']]
+    print(rowOut)
+    outputWriter.writerow(rowOut)
+outputWriter.close()
